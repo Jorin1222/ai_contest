@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>環資中心 AI 應用專案報告｜任務型文字自動化系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple: #534AB7;
+  --purple-dark: #1E1B4B;
+  --purple-light: #EDE9FF;
+  --purple-mid: #3C3489;
+  --green: #0F6E56;
+  --green-light: #E8F5F0;
+  --green-dark: #085041;
+  --coral: #D85A30;
+  --coral-light: #FFF0EC;
+  --white: #FFFFFF;
+  --gray-1: #F8F8F8;
+  --gray-2: #E5E5E5;
+  --text: #1A1A2E;
+  --text-muted: #6B6B8A;
+  --nav-w: 240px;
+  --transition: 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--text);
+  background: #F4F3FA;
+  line-height: 1.8;
+}
+
+/* ── Progress Bar ── */
+#progress-bar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--purple), var(--green));
+  width: 0%; z-index: 9999;
+  transition: width 0.1s linear;
+}
+
+/* ── Side Nav ── */
+#side-nav {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: var(--nav-w);
+  background: var(--purple-dark);
+  padding: 2rem 0;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex; flex-direction: column;
+  transition: transform var(--transition);
+}
+
+#side-nav .nav-logo {
+  padding: 0 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 1.5rem;
+}
+#side-nav .nav-logo .org { font-size: 0.7rem; letter-spacing: 0.15em; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 0.3rem; }
+#side-nav .nav-logo .title { font-size: 0.85rem; font-weight: 700; color: white; line-height: 1.4; }
+
+#side-nav nav a {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 1.5rem;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 400;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  line-height: 1.4;
+}
+#side-nav nav a .num { font-size: 0.65rem; opacity: 0.5; min-width: 1.2rem; }
+#side-nav nav a:hover { color: white; background: rgba(255,255,255,0.05); }
+#side-nav nav a.active { color: white; border-left-color: var(--green); background: rgba(15,110,86,0.15); font-weight: 500; }
+
+.nav-section-label {
+  padding: 1.2rem 1.5rem 0.4rem;
+  font-size: 0.6rem; letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+
+/* ── Main Content ── */
+#main {
+  margin-left: var(--nav-w);
+  min-height: 100vh;
+}
+
+/* ── Hero ── */
+#hero {
+  background: var(--purple-dark);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
+  padding: 6rem 5rem;
+  position: relative; overflow: hidden;
+}
+#hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(83,74,183,0.3) 0%, transparent 60%),
+              radial-gradient(ellipse at 20% 80%, rgba(15,110,86,0.2) 0%, transparent 50%);
+}
+.hero-tag {
+  display: inline-block;
+  background: rgba(83,74,183,0.4); border: 1px solid rgba(83,74,183,0.6);
+  color: #CECBF6; font-size: 0.7rem; letter-spacing: 0.15em;
+  padding: 0.4rem 1rem; border-radius: 2rem;
+  margin-bottom: 2rem; position: relative;
+  animation: fadeUp 0.6s ease both;
+}
+.hero-org {
+  font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,0.5);
+  letter-spacing: 0.1em; margin-bottom: 1rem; position: relative;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 900; color: white; line-height: 1.15;
+  margin-bottom: 0.5rem; position: relative;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+.hero-title span { color: #CECBF6; }
+.hero-sub {
+  font-size: 1.1rem; color: rgba(255,255,255,0.55);
+  margin-bottom: 3rem; position: relative;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+.hero-slogan {
+  display: inline-block;
+  background: rgba(83,74,183,0.3);
+  border: 1px solid rgba(206,203,246,0.3);
+  border-left: 4px solid #CECBF6;
+  padding: 1.2rem 2rem; border-radius: 0 0.75rem 0.75rem 0;
+  max-width: 520px; position: relative;
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+.hero-slogan .quote { font-size: 1.2rem; font-weight: 700; color: white; margin-bottom: 0.4rem; }
+.hero-slogan .sub { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+.hero-meta {
+  position: absolute; bottom: 3rem; right: 5rem;
+  text-align: right; color: rgba(255,255,255,0.3); font-size: 0.75rem; line-height: 2;
+  animation: fadeUp 0.6s 0.5s ease both;
+}
+
+/* ── Section Layout ── */
+.section {
+  padding: 5rem;
+  background: white;
+  border-bottom: 1px solid var(--gray-2);
+}
+.section:nth-child(even) { background: var(--gray-1); }
+.section-header { margin-bottom: 3rem; }
+.section-number {
+  font-size: 0.65rem; letter-spacing: 0.2em;
+  color: var(--purple); text-transform: uppercase;
+  margin-bottom: 0.5rem; font-weight: 700;
+}
+.section-title {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 900; color: var(--purple-dark);
+  line-height: 1.2;
+}
+.section-title em { color: var(--green); font-style: normal; }
+.section-desc { margin-top: 1rem; color: var(--text-muted); max-width: 680px; font-size: 0.95rem; }
+
+.subsection { margin-top: 3rem; }
+.subsection-title {
+  font-size: 1rem; font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.subsection-title::before {
+  content: ''; display: block;
+  width: 4px; height: 1.1em;
+  background: var(--green);
+  border-radius: 2px;
+}
+p { margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.9; color: #2A2A3E; }
+
+/* ── Stat Cards ── */
+.stat-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem; margin: 2.5rem 0;
+}
+.stat-card {
+  border-radius: 1rem; padding: 2rem 1.5rem;
+  text-align: center; position: relative; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+.stat-card.green { background: var(--green-light); border: 2px solid var(--green); }
+.stat-card.purple { background: var(--purple-light); border: 2px solid var(--purple); }
+.stat-card.coral { background: var(--coral-light); border: 2px solid var(--coral); }
+.stat-num {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 3rem; font-weight: 700; line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.stat-card.green .stat-num { color: var(--green); }
+.stat-card.purple .stat-num { color: var(--purple); }
+.stat-card.coral .stat-num { color: var(--coral); }
+.stat-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
+.stat-detail { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+.table-title {
+  text-align: center; font-size: 0.85rem; font-weight: 700;
+  color: var(--text-muted); margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th {
+  background: var(--green); color: white;
+  padding: 0.9rem 1rem; text-align: center;
+  font-weight: 700; font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+td {
+  padding: 0.8rem 1rem; border-bottom: 1px solid #eee;
+  vertical-align: top; line-height: 1.6;
+}
+tr:nth-child(even) td { background: var(--gray-1); }
+tr:hover td { background: var(--green-light); transition: background 0.15s; }
+.tag {
+  display: inline-block; padding: 0.2rem 0.7rem;
+  border-radius: 2rem; font-size: 0.7rem; font-weight: 700;
+}
+.tag-t01 { background: #E8F5F0; color: var(--green-dark); }
+.tag-t02 { background: var(--purple-light); color: var(--purple-dark); }
+.tag-t03 { background: #FFF8E1; color: #7B5E00; }
+
+/* ── Architecture Diagram ── */
+.arch-diagram {
+  background: #F0EEF8;
+  border: 1.5px solid #D4D0EE;
+  border-radius: 1.25rem;
+  padding: 2rem;
+  margin: 2rem 0;
+  color: var(--text);
+}
+.arch-row {
+  display: flex; align-items: stretch; gap: 1rem; margin-bottom: 1rem;
+}
+.arch-box {
+  flex: 1; border-radius: 0.75rem; padding: 1.1rem 1.25rem;
+  border: 1.5px solid #D4D0EE;
+}
+.arch-box.manager { background: #EDE9FF; border-color: var(--purple); }
+.arch-box.layer1  { background: white;   border-color: var(--purple); border-width: 2px; }
+.arch-box.layer2  { background: white;   border-color: var(--green);  border-width: 2px; }
+.arch-box.output  { background: #FFF3EE; border-color: var(--coral); }
+.arch-box-label {
+  font-size: 0.62rem; letter-spacing: 0.1em;
+  color: var(--text-muted); margin-bottom: 0.3rem; text-transform: uppercase;
+}
+.arch-box-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--purple-dark); }
+.arch-box.layer2 .arch-box-title { color: var(--green-dark); }
+.arch-box.output  .arch-box-title { color: var(--coral); }
+.arch-box-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+.arch-arrow {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--purple); font-size: 1.4rem; flex-shrink: 0; min-width: 2rem;
+}
+.arch-arrow small { font-size: 0.6rem; color: var(--text-muted); margin-top: 0.15rem; white-space: nowrap; }
+.arch-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin: 0.75rem 0; }
+.arch-steps-daily { grid-template-columns: repeat(3, 1fr); }
+.arch-step {
+  background: white; border: 1.5px solid #C8E8DF;
+  border-radius: 0.75rem; padding: 0.9rem;
+  text-align: center;
+}
+.arch-step .step-n {
+  width: 1.8rem; height: 1.8rem; background: var(--green);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.8rem; margin: 0 auto 0.4rem; color: white;
+}
+.arch-step .step-t { font-size: 0.75rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--green-dark); }
+.arch-step .step-d { font-size: 0.68rem; color: var(--text-muted); line-height: 1.4; }
+
+/* ── Before/After Toggle ── */
+.compare-wrap { margin: 2rem 0; }
+.compare-tabs {
+  display: flex; gap: 0.5rem; margin-bottom: 1rem;
+}
+.compare-tab {
+  padding: 0.6rem 1.5rem; border-radius: 2rem;
+  border: 2px solid var(--gray-2);
+  background: white; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600;
+  transition: all 0.2s;
+}
+.compare-tab.active.before { background: var(--coral); border-color: var(--coral); color: white; }
+.compare-tab.active.after { background: var(--green); border-color: var(--green); color: white; }
+.compare-panel {
+  border-radius: 1rem; padding: 2rem;
+  display: none; animation: fadeIn 0.3s ease;
+}
+.compare-panel.before { background: #FFF5F2; border: 2px solid var(--coral); }
+.compare-panel.after { background: var(--green-light); border: 2px solid var(--green); }
+.compare-panel.active { display: block; }
+.compare-label {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  margin-bottom: 1rem; text-transform: uppercase;
+}
+.compare-panel.before .compare-label { color: var(--coral); }
+.compare-panel.after .compare-label { color: var(--green); }
+.compare-text { font-size: 0.95rem; line-height: 2; }
+.compare-meta {
+  margin-top: 1rem; padding-top: 1rem;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  display: flex; gap: 2rem; font-size: 0.8rem; color: var(--text-muted);
+}
+.compare-meta strong { display: block; font-size: 1rem; }
+.compare-panel.before .compare-meta strong { color: var(--coral); }
+.compare-panel.after .compare-meta strong { color: var(--green); }
+
+/* ── Case Cards ── */
+.case-list { display: flex; flex-direction: column; gap: 1rem; margin: 1.5rem 0; }
+.case-card {
+  border-radius: 1rem; border: 1.5px solid var(--gray-2);
+  background: white; overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.case-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.07); }
+.case-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 1.75rem; cursor: pointer;
+  background: white; transition: background 0.15s;
+}
+.case-header:hover { background: var(--gray-1); }
+.case-header-left { display: flex; align-items: center; gap: 1rem; }
+.case-num {
+  width: 2.2rem; height: 2.2rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+}
+.case-card:nth-child(1) .case-num { background: var(--purple-light); color: var(--purple); }
+.case-card:nth-child(2) .case-num { background: var(--green-light); color: var(--green); }
+.case-card:nth-child(3) .case-num { background: var(--coral-light); color: var(--coral); }
+.case-title-wrap .case-title-text { font-size: 0.95rem; font-weight: 700; }
+.case-title-wrap .case-author { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+.case-arrow {
+  font-size: 1.2rem; color: var(--text-muted);
+  transition: transform 0.25s; flex-shrink: 0;
+}
+.case-card.open .case-arrow { transform: rotate(90deg); }
+.case-body {
+  display: none; padding: 0 1.75rem 1.75rem;
+  border-top: 1px solid var(--gray-2);
+  animation: fadeIn 0.25s ease;
+}
+.case-card.open .case-body { display: block; }
+.case-section { margin-top: 1.25rem; }
+.case-section-label {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;
+}
+.case-section p { font-size: 0.88rem; margin-bottom: 0; }
+.case-badge {
+  display: inline-block; margin-top: 0.75rem;
+  padding: 0.4rem 1rem; border-radius: 2rem;
+  font-size: 0.78rem; font-weight: 700;
+}
+.case-card:nth-child(1) .case-badge { background: var(--purple-light); color: var(--purple); }
+.case-card:nth-child(2) .case-badge { background: var(--green-light); color: var(--green); }
+.case-card:nth-child(3) .case-badge { background: var(--coral-light); color: var(--coral); }
+
+/* ── SOP Steps ── */
+.sop-phases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin: 1.5rem 0; }
+.sop-phase {
+  border-radius: 1rem; padding: 1.75rem;
+  border: 1.5px solid var(--gray-2); background: white;
+}
+.sop-phase.active { border-color: var(--green); background: var(--green-light); }
+.sop-phase-label {
+  font-size: 0.65rem; letter-spacing: 0.12em;
+  color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase;
+}
+.sop-phase-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--purple-dark); }
+.sop-phase.active .sop-phase-title { color: var(--green-dark); }
+.sop-steps-list { list-style: none; }
+.sop-steps-list li {
+  display: flex; gap: 0.75rem; align-items: flex-start;
+  padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 0.85rem;
+}
+.sop-steps-list li:last-child { border-bottom: none; }
+.sop-step-num {
+  min-width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: var(--green); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 0.1rem;
+}
+.sop-phase:not(.active) .sop-step-num { background: var(--purple); }
+
+/* ── Highlight Box ── */
+.highlight-box {
+  background: var(--green-light);
+  border-left: 5px solid var(--green);
+  border-radius: 0 0.75rem 0.75rem 0;
+  padding: 1.5rem 2rem; margin: 2rem 0;
+  font-style: italic; font-size: 0.95rem;
+  color: var(--green-dark); line-height: 1.9;
+}
+.highlight-box.purple {
+  background: var(--purple-light);
+  border-left-color: var(--purple);
+  color: var(--purple-dark);
+}
+.highlight-box.coral {
+  background: var(--coral-light);
+  border-left-color: var(--coral);
+  color: #7A2A10;
+}
+
+/* ── Bullet List ── */
+.bullet-list { list-style: none; margin: 1rem 0; }
+.bullet-list li {
+  display: flex; gap: 0.75rem; align-items: flex-start;
+  padding: 0.4rem 0; font-size: 0.9rem; line-height: 1.7;
+}
+.bullet-list li::before {
+  content: '▸'; color: var(--green); flex-shrink: 0; margin-top: 0.05rem;
+}
+
+/* ── Phase Tags ── */
+.phase-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1rem; margin: 1.5rem 0;
+}
+.phase-box {
+  border-radius: 0.75rem; padding: 1.25rem;
+  background: var(--purple-light); border: 1.5px solid rgba(83,74,183,0.2);
+  text-align: center;
+}
+.phase-tag {
+  display: inline-block; background: var(--purple);
+  color: white; font-size: 0.65rem; font-weight: 700;
+  padding: 0.2rem 0.6rem; border-radius: 2rem; margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+.phase-title { font-size: 0.82rem; font-weight: 700; color: var(--purple-dark); margin-bottom: 0.3rem; }
+.phase-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ── Scenario Cards ── */
+.scenario-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem; margin: 1.5rem 0;
+}
+.scenario-card {
+  border-radius: 0.875rem; padding: 1.5rem;
+  border: 1.5px solid var(--gray-2); background: white;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.scenario-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+.scenario-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+.scenario-name { font-size: 0.95rem; font-weight: 700; color: var(--purple-dark); }
+.scenario-badge {
+  font-size: 0.7rem; font-weight: 700; padding: 0.25rem 0.7rem;
+  border-radius: 2rem; background: var(--green-light); color: var(--green);
+  white-space: nowrap;
+}
+.scenario-desc { font-size: 0.83rem; color: var(--text-muted); line-height: 1.6; }
+
+/* ── Closing Section ── */
+#closing {
+  background: var(--purple-dark);
+  padding: 6rem 5rem;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+#closing::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(83,74,183,0.5), transparent 60%);
+}
+#closing .closing-title {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 900; color: white; margin-bottom: 1.5rem;
+  position: relative;
+}
+#closing .closing-text {
+  max-width: 680px; margin: 0 auto 3rem;
+  color: rgba(255,255,255,0.65); font-size: 1rem; line-height: 2;
+  position: relative;
+}
+.score-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem; max-width: 900px; margin: 0 auto;
+  position: relative;
+}
+.score-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 1rem; padding: 1.75rem;
+  text-align: left; transition: background 0.2s;
+}
+.score-card:hover { background: rgba(255,255,255,0.1); }
+.score-tag {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+.score-card:nth-child(1) .score-tag { color: #CECBF6; }
+.score-card:nth-child(2) .score-tag { color: #9FE1CB; }
+.score-card:nth-child(3) .score-tag { color: #F5C4B3; }
+.score-title { font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 0.5rem; }
+.score-desc { font-size: 0.8rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+/* ── Footer ── */
+footer {
+  background: #0D0C1D; color: rgba(255,255,255,0.25);
+  text-align: center; padding: 2rem; font-size: 0.75rem;
+  margin-left: 0;
+}
+
+/* ── Mobile Nav Toggle ── */
+#nav-toggle {
+  display: none;
+  position: fixed; top: 1rem; left: 1rem; z-index: 200;
+  width: 2.5rem; height: 2.5rem; border-radius: 0.5rem;
+  background: var(--purple-dark); border: none; cursor: pointer;
+  flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+}
+#nav-toggle span { width: 1.2rem; height: 2px; background: white; border-radius: 1px; }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+.reveal {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  :root { --nav-w: 0px; }
+  #side-nav { transform: translateX(-100%); width: 240px; }
+  #side-nav.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  #nav-toggle { display: flex; }
+  .hero { padding: 5rem 2rem 4rem; }
+  #hero { padding: 5rem 2rem; }
+  .section { padding: 3.5rem 2rem; }
+  .stat-grid, .arch-steps, .phase-grid, .score-grid { grid-template-columns: 1fr 1fr; }
+  .sop-phases, .scenario-grid { grid-template-columns: 1fr; }
+  .arch-row { flex-direction: column; }
+  .arch-arrow { flex-direction: row; transform: rotate(0deg); }
+  #closing { padding: 4rem 2rem; }
+}
+@media (max-width: 600px) {
+  .stat-grid, .score-grid, .arch-steps, .arch-steps-daily, .phase-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<button id="nav-toggle" aria-label="開啟導覽">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Side Navigation -->
+<aside id="side-nav">
+  <div class="nav-logo">
+    <div class="org">環資中心 · 2026</div>
+    <div class="title">AI 應用專案報告</div>
+  </div>
+  <nav>
+    <span class="nav-section-label">報告內容</span>
+    <a href="#hero" data-section="hero"><span class="num">00</span>封面</a>
+    <a href="#summary" data-section="summary"><span class="num">01</span>執行摘要</a>
+    <a href="#background" data-section="background"><span class="num">02</span>問題與背景</a>
+    <a href="#solution" data-section="solution"><span class="num">03</span>解決方案</a>
+    <a href="#sop" data-section="sop"><span class="num">03.4</span>操作 SOP</a>
+    <a href="#results" data-section="results"><span class="num">04</span>實際成果</a>
+    <a href="#cases" data-section="cases"><span class="num">04.4</span>部門案例</a>
+    <a href="#promotion" data-section="promotion"><span class="num">05</span>推廣建議</a>
+    <a href="#closing" data-section="closing"><span class="num">06</span>結語</a>
+  </nav>
+</aside>
+
+<!-- Main Content -->
+<div id="main">
+
+<!-- Hero -->
+<section id="hero">
+  <div class="hero-tag">Gemini × Gems · 任務型文字自動化</div>
+  <div class="hero-org">環資中心 AI 應用專案報告</div>
+  <h1 class="hero-title">任務型<br><span>文字自動化系統</span></h1>
+  <div class="hero-sub">以 Gemini Gems 建構文字統一化工具為例</div>
+  <div class="hero-slogan">
+    <div class="quote">「給同仁一把釣竿」</div>
+    <div class="sub">讓每位同仁都能建立自己的 AI 助理</div>
+  </div>
+  <div class="hero-meta">
+    使用工具：Gemini × Gems<br>
+    報告人：蔡育霖
+  </div>
+</section>
+
+<!-- 01 執行摘要 -->
+<section class="section" id="summary">
+  <div class="section-header reveal">
+    <div class="section-number">01 · 執行摘要</div>
+    <h2 class="section-title">用 <em>80% 的時間節省</em>，<br>實現 0 元成本的 AI 導入</h2>
+    <p class="section-desc">本專案運用 Gemini Gems 建構一套「兩層式任務型文字自動化系統」，解決在執行計畫時，大量重複性文字產出格式不一、耗時費力的痛點。</p>
+  </div>
+
+  <div class="stat-grid reveal">
+    <div class="stat-card green">
+      <div class="stat-num" data-target="80" data-suffix="%">0%</div>
+      <div class="stat-label">文字產出時間節省</div>
+      <div class="stat-detail">60 分鐘 → 12 分鐘<br>（以 10 筆異常事件為例）</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-num" data-target="0" data-prefix="NT$" data-suffix="">NT$0</div>
+      <div class="stat-label">額外授權成本</div>
+      <div class="stat-detail">全程使用免費 Google 帳號<br>無需企業版授權</div>
+    </div>
+    <div class="stat-card coral">
+      <div class="stat-num" data-target="4" data-suffix=" 步驟">0 步驟</div>
+      <div class="stat-label">同仁自助建立專屬助理</div>
+      <div class="stat-detail">不需任何 AI 背景知識<br>首次建立約 30 分鐘</div>
+    </div>
+  </div>
+
+  <div class="highlight-box purple reveal">
+    <strong>核心設計理念：</strong>管理者只需建置一次第一層 Gem（Gem 製造機），部門所有同仁即可自助上傳自己的文件範本，取得專屬第二層 Gem 指令，建立自己的文字統一助理。整個系統全程基於免費 Google 帳號，無需任何 AI 背景知識。
+  </div>
+</section>
+
+<!-- 02 問題與背景 -->
+<section class="section" id="background">
+  <div class="section-header reveal">
+    <div class="section-number">02 · 問題與背景</div>
+    <h2 class="section-title">為什麼<em>現在需要</em>解決這個問題？</h2>
+  </div>
+
+  <div class="reveal">
+    <p>環資中心每月須處理大量涉及多家業者異常事件、認證量核發等工作，現階段每筆異常皆需由稽核員撰寫說明，此作業雖具高度重複性，卻長期存在以下三項問題：</p>
+
+    <div class="table-wrap">
+      <div class="table-title">表 2-1 現況描述及痛點分析</div>
+      <table>
+        <thead><tr><th>痛點</th><th>現況描述</th><th>影響</th></tr></thead>
+        <tbody>
+          <tr><td><strong>重複性文字耗時</strong></td><td>相似案件須重複撰寫相似文字，缺乏有效模板</td><td>每筆約需 5～10 分鐘</td></tr>
+          <tr><td><strong>格式與用語不統一</strong></td><td>不同人員、不同時期的報告表達方式差異大</td><td>需要再多一步彙整作業</td></tr>
+          <tr><td><strong>知識依賴個人經驗</strong></td><td>標準用語散落於各份舊報告中，新人難以上手</td><td>人員交接訓練成本大</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="highlight-box reveal">
+      Gemini Gems 的自訂義 AI 助理功能，讓「建立一個只做一件事的專精助理」變得簡單可行。結合免費 Google 帳號即可使用的特性，使得本部門有機會以零成本、低門檻的方式，將這個長期存在的痛點系統性解決。
+    </div>
+  </div>
+</section>
+
+<!-- 03 解決方案 -->
+<section class="section" id="solution">
+  <div class="section-header reveal">
+    <div class="section-number">03 · 解決方案</div>
+    <h2 class="section-title"><em>兩層式 Gem 架構</em><br>讓每個人都能建立自己的 AI 助理</h2>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">Gemini Gems 核心優勢</div>
+    <ul class="bullet-list">
+      <li>免費帳號可使用：無需企業授權，全部門人員皆可建立與使用</li>
+      <li>任務專精：每個 Gem 只做一件事，輸出穩定、不偏題</li>
+      <li>零操作門檻：建立後使用者只需貼入文字，不需再撰寫重複性的 Prompt</li>
+      <li>Google 生態整合：與 Gmail、Google Drive、Google Doc 工作流程無縫銜接</li>
+    </ul>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">兩層式架構設計</div>
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box manager">
+          <div class="arch-box-label">管理者 · 一次性建置</div>
+          <div class="arch-box-title">建立第一層 Gem</div>
+          <div class="arch-box-desc">Gem 製造機</div>
+        </div>
+        <div class="arch-arrow">↓<small>開放全部門</small></div>
+        <div class="arch-box layer1">
+          <div class="arch-box-label">Layer 1 · 任務解析器</div>
+          <div class="arch-box-title">第一層 Gem｜Gem 製造機</div>
+          <div class="arch-box-desc">分析範本句型 → 產出第二層 Gem 指令</div>
+        </div>
+      </div>
+
+      <div class="arch-steps">
+        <div class="arch-step">
+          <div class="step-n">1</div>
+          <div class="step-t">上傳範本</div>
+          <div class="step-d">同仁上傳自己的標準範本文件</div>
+        </div>
+        <div class="arch-step">
+          <div class="step-n">2</div>
+          <div class="step-t">取得指令</div>
+          <div class="step-d">第一層 Gem 分析後產出 Gem 指令</div>
+        </div>
+        <div class="arch-step">
+          <div class="step-n">3</div>
+          <div class="step-t">建立助理</div>
+          <div class="step-d">複製指令建立自己的第二層 Gem</div>
+        </div>
+        <div class="arch-step">
+          <div class="step-n">4</div>
+          <div class="step-t">日常使用</div>
+          <div class="step-d">貼入原文，一鍵輸出統一格式</div>
+        </div>
+      </div>
+
+      <div class="arch-row" style="margin-top:1.5rem;margin-bottom:0;">
+        <div class="arch-box layer2">
+          <div class="arch-box-label">Layer 2 · 任務執行器</div>
+          <div class="arch-box-title">第二層 Gem｜文字統一助理</div>
+          <div class="arch-box-desc">貼入原始文字 → 自動統一格式輸出</div>
+        </div>
+        <div class="arch-arrow">→<small>輸出</small></div>
+        <div class="arch-box output">
+          <div class="arch-box-label">結果</div>
+          <div class="arch-box-title">統一格式文字</div>
+          <div class="arch-box-desc">100% 符合標準句型，無需校對</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">關鍵提示詞設計（Prompt Engineering）</div>
+    <p>本專案第一層 Gem 的系統指令採用精心設計的 Markdown 結構化格式，以下說明三個關鍵設計邏輯：</p>
+    <div class="phase-grid">
+      <div class="phase-box">
+        <div class="phase-tag">PHASE 設計</div>
+        <div class="phase-title">四階段流程結構</div>
+        <div class="phase-desc">PHASE 1-4 確保 AI 依序執行，不跳步驟、不混淆任務</div>
+      </div>
+      <div class="phase-box">
+        <div class="phase-tag">F/V/T 編號</div>
+        <div class="phase-title">編號系統設計</div>
+        <div class="phase-desc">固定文字(F)、變數(V)、句型變體(T)，讓對照表結構清晰</div>
+      </div>
+      <div class="phase-box">
+        <div class="phase-tag">防呆機制</div>
+        <div class="phase-title">邊界條件設計</div>
+        <div class="phase-desc">輸入無關內容時 Gem 回覆固定提示語，確保任務專精</div>
+      </div>
+      <div class="phase-box">
+        <div class="phase-tag">自動判斷</div>
+        <div class="phase-title">批次輸出設計</div>
+        <div class="phase-desc">一次貼入多筆，AI 逐筆自動判斷類型並套用對應句型</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03.4 SOP -->
+<section class="section" id="sop">
+  <div class="section-header reveal">
+    <div class="section-number">03.4 · 操作 SOP</div>
+    <h2 class="section-title">完整的<em>操作流程</em></h2>
+    <p class="section-desc">整體操作分為兩個階段，建置完後即可於日常工作流程使用。</p>
+  </div>
+
+  <div class="sop-phases reveal">
+    <div class="sop-phase">
+      <div class="sop-phase-label">建置期 · 管理者 · 已完成</div>
+      <div class="sop-phase-title">第一層 Gem 建置</div>
+      <ul class="sop-steps-list">
+        <li><span class="sop-step-num">1</span>將 Markdown 格式指令複製至 Gemini Gems 建立新 Gem</li>
+        <li><span class="sop-step-num">2</span>上傳 3 份以上標準文件，確認句型解析確認表輸出正確</li>
+        <li><span class="sop-step-num">3</span>確認 F01/F02 固定文字、V01/V02 變數、T01-T03 變體完整</li>
+        <li><span class="sop-step-num">4</span>將 Gem 連結分享給同仁，附上簡易操作說明</li>
+      </ul>
+    </div>
+    <div class="sop-phase active">
+      <div class="sop-phase-label">推廣期 · 同仁自助 · 4 步驟</div>
+      <div class="sop-phase-title">第二層 Gem 建立（同仁）</div>
+      <ul class="sop-steps-list">
+        <li><span class="sop-step-num">1</span>開啟第一層 Gem，上傳自己業務的標準範本文件（建議 3 份以上）</li>
+        <li><span class="sop-step-num">2</span>第一層 Gem 自動分析句型結構，輸出確認對照表（可貼入 Excel 審核）</li>
+        <li><span class="sop-step-num">3</span>確認對照表後，Gem 產出完整的第二層 Gem 系統指令</li>
+        <li><span class="sop-step-num">4</span>複製指令至 Gemini Gems，建立自己的專屬文字統一助理</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">日常使用（每次作業）</div>
+    <div class="arch-diagram" style="padding:1.5rem;">
+      <div class="arch-steps arch-steps-daily">
+        <div class="arch-step">
+          <div class="step-n">1</div>
+          <div class="step-t">開啟第二層 Gem</div>
+          <div class="step-d">開啟自己建立的任務執行器</div>
+        </div>
+        <div class="arch-step">
+          <div class="step-n">2</div>
+          <div class="step-t">貼入原始文字</div>
+          <div class="step-d">可一次貼入多筆，Gem 自動逐筆處理</div>
+        </div>
+        <div class="arch-step">
+          <div class="step-n">3</div>
+          <div class="step-t">取得統一格式</div>
+          <div class="step-d">人工確認後直接採用，附件代號等請核對</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box coral reveal">
+    <strong>🔒 資安合規：</strong>嚴禁將個資或機敏文件上傳至 Gemini Gems。建議使用去識別化後的範本文件進行訓練。Gemini Gems 生成之文字內容，依 Google 服務條款，使用者擁有其著作權，可用於正式報告。
+  </div>
+</section>
+
+<!-- 04 實際成果 -->
+<section class="section" id="results">
+  <div class="section-header reveal">
+    <div class="section-number">04 · 實際成果展示</div>
+    <h2 class="section-title">從<em>文字輸入</em>到<em>標準輸出</em><br>僅需 10 秒</h2>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">演練標的：廢機動車輛類 CCTV 異常事件</div>
+    <p>以「廢機動車輛類-乙計畫 CCTV 判讀異常事件彙總表」為演練標的，目標欄位為「稽核認證團體異常處理情形」，成功識別出 3 種句型變體：</p>
+
+    <div class="table-wrap">
+      <div class="table-title">表 4-1 廢車 CCTV 異常文字格式經第一層分析後變體產出結果</div>
+      <table>
+        <thead><tr><th>變體</th><th>觸發條件</th><th>對應句型</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-t01">T01</span></td>
+            <td>一般畫面異常或斷訊情形</td>
+            <td>針對{{異常對象及情形}}，經查係因{{發生原因}}所致，{{處理方式及時間}}，異常期間{{異常期間狀態}}，經稽核員查核畫面後，未發現有違反手冊規範之情事，故不影響稽核認證量核發。（{{附件編號}}）</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-t02">T02</span></td>
+            <td>斷訊未達 3 分鐘等無須通報之異常</td>
+            <td>針對{{異常對象及情形}}，經查上述時段均未連續斷訊超過 3 分鐘以上且不影響判讀，依手冊規定無須通報異常，亦請廠方備註於受補貼機構 CCTV 判讀紀錄表供備查。（{{附件編號}}）</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-t03">T03</span></td>
+            <td>無異常情形</td>
+            <td>本月份抽判日，全日所有畫面皆無異常情形</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">導入前後對比</div>
+    <div class="compare-wrap">
+      <div class="compare-tabs">
+        <button class="compare-tab before active" onclick="switchCompare('before')">導入前｜人工撰寫</button>
+        <button class="compare-tab after" onclick="switchCompare('after')">導入後｜Gem 輸出</button>
+      </div>
+      <div class="compare-panel before active" id="panel-before">
+        <div class="compare-label">✏️ 導入前 · 人工撰寫</div>
+        <div class="compare-text">巨基公司用附件 1 回復、CCTV 斷訊、3/20 1800~1900，已在當日 19:00 修復、原因是因為線路不穩而導致，已可由輔助鏡頭查看，確認沒有問題</div>
+        <div class="compare-meta">
+          <div><strong>約 3 分鐘</strong>處理時間／筆</div>
+          <div><strong>因人而異</strong>格式一致性</div>
+        </div>
+      </div>
+      <div class="compare-panel after" id="panel-after">
+        <div class="compare-label">✅ 導入後 · Gem 輸出</div>
+        <div class="compare-text">針對巨基公司 CCTV 於 3/20 1800~1900 斷訊，經查係因線路不穩而導致，已於 3/20 19:00 修復，異常期間已由輔助鏡頭查看，經稽核員查核畫面後，未發現有違反手冊規範之情事，故不影響稽核認證量核發。（附件 1）</div>
+        <div class="compare-meta">
+          <div><strong>約 10 秒</strong>處理時間／筆</div>
+          <div><strong>100%</strong>格式一致性</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">時間效益（以 10 筆為例）</div>
+    <div class="table-wrap">
+      <div class="table-title">表 4-3 導入後時間節省效益成效</div>
+      <table>
+        <thead><tr><th>作業項目</th><th>人工</th><th>Gem 輔助</th><th>節省</th></tr></thead>
+        <tbody>
+          <tr><td>閱讀原始資料</td><td>10 分鐘</td><td>10 分鐘</td><td>—</td></tr>
+          <tr><td>逐筆撰寫處理情形</td><td>30 分鐘</td><td>2 分鐘</td><td><strong style="color:var(--green)">↓ 90%</strong></td></tr>
+          <tr><td>格式校對與統一</td><td>20 分鐘</td><td>0 分鐘</td><td><strong style="color:var(--green)">↓ 100%</strong></td></tr>
+          <tr><td><strong>合計</strong></td><td><strong>60 分鐘</strong></td><td><strong>12 分鐘</strong></td><td><strong style="color:var(--green);font-size:1.05rem">↓ 約 80%</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 04.4 部門案例 -->
+<section class="section" id="cases">
+  <div class="section-header reveal">
+    <div class="section-number">04.4 · 部門實際應用案例</div>
+    <h2 class="section-title">三個同仁<em>實際建置</em>的案例</h2>
+    <p class="section-desc">本系統架構自推廣後，已有多位同仁應用於實際業務。點擊各案例查看詳情。</p>
+  </div>
+
+  <div class="case-list reveal">
+    <div class="case-card" id="case-1">
+      <div class="case-header" onclick="toggleCase('case-1')">
+        <div class="case-header-left">
+          <div class="case-num">1</div>
+          <div class="case-title-wrap">
+            <div class="case-title-text">東部運補緩發文字精算產生器</div>
+            <div class="case-author">游道旻 · 廢塑膠稽核認證專案</div>
+          </div>
+        </div>
+        <div class="case-arrow">›</div>
+      </div>
+      <div class="case-body">
+        <div class="case-section">
+          <div class="case-section-label">應用場景</div>
+          <p>東部廢棄物運補計畫的補貼認證回收量緩發說明文字產出，每月須針對多家廠商逐筆撰寫「補貼之認證回收量」說明，文字格式固定但數值變動頻繁，涉及廠商名稱、品項、地區、數量等多個變數。</p>
+        </div>
+        <div class="case-section">
+          <div class="case-section-label">實作成果</div>
+          <p>同仁依本系統 SOP，上傳既有範本至第一層 Gem 後，產出專屬的文字精算產生器。使用後可自動依廠商、品項、地區、數量等變數填入標準句型，直接輸出可附報告的說明段落，大幅減少逐筆手動撰寫的時間。</p>
+        </div>
+        <span class="case-badge">處理時間：2 小時 → 15 分鐘（↓ 87.5%）</span>
+      </div>
+    </div>
+
+    <div class="case-card" id="case-2">
+      <div class="case-header" onclick="toggleCase('case-2')">
+        <div class="case-header-left">
+          <div class="case-num">2</div>
+          <div class="case-title-wrap">
+            <div class="case-title-text">廢車認證清單文字產生器</div>
+            <div class="case-author">藍之昀 · 廢車稽核認證專案</div>
+          </div>
+        </div>
+        <div class="case-arrow">›</div>
+      </div>
+      <div class="case-body">
+        <div class="case-section">
+          <div class="case-section-label">應用場景</div>
+          <p>廢車稽核認證作業的認證清單文字標準化，每月須針對各廢車拆解廠產出認證說明，涵蓋認證期間、認證字號、核發日期、核發認證量及各項備註說明（ASR 庫存、廢橡膠、廢塑膠、廢玻璃存比例、資源回收再利用比例等）。</p>
+        </div>
+        <div class="case-section">
+          <div class="case-section-label">實作成果</div>
+          <p>建立廢車認證清單專屬 Gem 後，輸入結構化資料即可自動輸出符合格式的完整認證說明段落，包含各比例合規判斷（如符合手冊規範、暫緩核算等），格式一致性顯著提升，人工校對時間大幅縮短。</p>
+        </div>
+        <span class="case-badge">各比例合規判斷自動輸出，格式一致性提升</span>
+      </div>
+    </div>
+
+    <div class="case-card" id="case-3">
+      <div class="case-header" onclick="toggleCase('case-3')">
+        <div class="case-header-left">
+          <div class="case-num">3</div>
+          <div class="case-title-wrap">
+            <div class="case-title-text">家電 CCTV 異常事件說明及回覆</div>
+            <div class="case-author">吳方元 · 廢電子電器及資訊物品稽核認證專案</div>
+          </div>
+        </div>
+        <div class="case-arrow">›</div>
+      </div>
+      <div class="case-body">
+        <div class="case-section">
+          <div class="case-section-label">應用場景</div>
+          <p>即為本報告之核心演練標的，家電類 CCTV 判讀異常事件的處理情形說明文字統一化，涵蓋畫面異常、冷媒外洩等多種異常類型，每月需處理數十筆異常事件說明。</p>
+        </div>
+        <div class="case-section">
+          <div class="case-section-label">實作成果</div>
+          <p>成功建立「CCTV 異常事件說明及回覆」專屬 Gem，貼入原始事件描述即可自動辨識異常類型並套用對應句型，輸出符合稽核認證報告標準的處理情形說明。</p>
+        </div>
+        <span class="case-badge">處理時間由 8 分鐘縮短至 1 分鐘（↓ 87.5%）</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap reveal">
+    <div class="table-title">表 4-4 部門實際應用案例彙整</div>
+    <table>
+      <thead><tr><th>案例</th><th>應用場景</th><th>建立者</th><th>主要效益</th></tr></thead>
+      <tbody>
+        <tr><td>東部運補緩發文字精算產生器</td><td>補貼認證回收量緩發說明</td><td>游道旻</td><td>處理時間 2h→15min（↓87.5%）</td></tr>
+        <tr><td>廢車認證清單文字產生器</td><td>廢車稽核認證清單文字標準化</td><td>藍之昀</td><td>合規判斷自動輸出，格式一致性提升</td></tr>
+        <tr><td>家電 CCTV 異常事件說明及回覆</td><td>CCTV 判讀異常處理情形統一化</td><td>吳方元</td><td>處理時間 8min→1min（↓87.5%）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box reveal">
+    以上三個案例皆由同仁在未接受任何 AI 專業訓練的情況下，依照本系統 SOP 自助完成建置，充分驗證「給他魚吃，不如給他釣竿」的核心理念——讓每位同仁都能成為能夠為自己打造 AI 工具的建置者。
+  </div>
+</section>
+
+<!-- 05 推廣建議 -->
+<section class="section" id="promotion">
+  <div class="section-header reveal">
+    <div class="section-number">05 · 推廣建議</div>
+    <h2 class="section-title">不論專案、組別，<br><em>只要有重複性文字就能套用</em></h2>
+  </div>
+
+  <div class="scenario-grid reveal">
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-name">機關來往公文</div>
+        <div class="scenario-badge">↓ 60%</div>
+      </div>
+      <div class="scenario-desc">主旨、說明、結尾收文句式統一，減少公文草稿時間約 60%</div>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-name">法規合規查詢</div>
+        <div class="scenario-badge">↓ 70%</div>
+      </div>
+      <div class="scenario-desc">合規判斷結論格式統一，查詢與撰寫時間減少約 70%</div>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-name">制式 Email</div>
+        <div class="scenario-badge">↓ 50%</div>
+      </div>
+      <div class="scenario-desc">問候語、信件內容、結語格式統一，會後整理時間縮短約 50%</div>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="scenario-name">稽核查核表</div>
+        <div class="scenario-badge">↓ 60%+</div>
+      </div>
+      <div class="scenario-desc">各類查核結論句型統一，人員彙整時間縮短 60% 以上</div>
+    </div>
+  </div>
+
+  <div class="subsection reveal">
+    <div class="subsection-title">成本與風險評估</div>
+    <div class="table-wrap">
+      <div class="table-title">表 5-2 本專案建置各項成本</div>
+      <table>
+        <thead><tr><th>項目</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td><strong>授權費用</strong></td><td>全程使用免費 Google 帳號，0 元額外成本</td></tr>
+          <tr><td><strong>學習門檻</strong></td><td>使用者不需學習 Prompt 技巧，僅需會貼上文字</td></tr>
+          <tr><td><strong>準確性風險</strong></td><td>Gem 輸出為草稿，附件代號等關鍵數值需人工確認，已納入 SOP</td></tr>
+          <tr><td><strong>維護成本</strong></td><td>句型若有調整，重新執行第一層 Gem 即可更新，約需 30 分鐘</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="highlight-box purple reveal">
+    <strong>能力培養的附加價值：</strong>同仁在使用第一層 Gem 建立自己專屬助理的過程中，將實際體驗到「如何透過結構化指令引導 AI 執行任務」的核心邏輯，自然而然地掌握 Gemini Gems 的進階使用方法。<br><br>
+    透過此操作，同仁不只是 AI 工具的使用者，更成為能夠「為自己設計 AI 助理」的建置者。無需額外教育訓練，推廣過程本身即培養了同仁整體的 AI 應用能力。
+  </div>
+</section>
+
+<!-- Closing -->
+<section id="closing">
+  <div class="closing-title">給他魚吃，不如給他釣竿。</div>
+  <p class="closing-text">
+    本專案成功驗證了一套以 Gemini Gems 為核心的兩層式任務型文字自動化系統，將稽核認證文字的產出時間節省約 80%，同時實現格式 100% 一致性。<br><br>
+    更深遠的意義在於：同仁在自助建立第二層 Gem 的過程中，實際學習了結構化指令的設計邏輯，自然培養了進階 AI 使用能力，為部門建立了一個可持續成長的 AI 應用文化。
+  </p>
+
+  <div class="score-grid">
+    <div class="score-card">
+      <div class="score-tag">評審重點 01</div>
+      <div class="score-title">AI 工具運用全面性</div>
+      <div class="score-desc">五項 Gems 功能深度客製化：自訂指令 × 知識注入 × 句型分析 × 變體判斷 × 批次輸出</div>
+    </div>
+    <div class="score-card">
+      <div class="score-tag">評審重點 02</div>
+      <div class="score-title">操作 SOP 完整性</div>
+      <div class="score-desc">建置期 + 同仁自助建立 + 日常使用三套完整 SOP，含輸入輸出範例</div>
+    </div>
+    <div class="score-card">
+      <div class="score-tag">評審重點 03</div>
+      <div class="score-title">可擴散性與可複製性</div>
+      <div class="score-desc">0 元成本、4 步驟、部門內 3 個案例已驗證、四種以上業務場景可套用</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  環資中心 AI 應用專案報告 · 2026 · 任務型文字自動化系統 · Gemini × Gems<br>
+  本報告使用 AI 工具輔助製作，內容已由專業人員審核確認。
+</footer>
+
+</div><!-- /main -->
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (window.scrollY / total) * 100;
+  document.getElementById('progress-bar').style.width = progress + '%';
+});
+
+// Side nav active state
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('#side-nav nav a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + entry.target.id) {
+          link.classList.add('active');
+        }
+      });
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+
+// Reveal on scroll
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 60);
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// Count-up animation
+function animateCount(el) {
+  const target = parseInt(el.getAttribute('data-target'));
+  const suffix = el.getAttribute('data-suffix') || '';
+  const prefix = el.getAttribute('data-prefix') || '';
+  let start = 0;
+  const duration = 1200;
+  const step = (timestamp) => {
+    if (!start) start = timestamp;
+    const progress = Math.min((timestamp - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = prefix + Math.floor(eased * target) + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = prefix + target + suffix;
+  };
+  requestAnimationFrame(step);
+}
+const statNums = document.querySelectorAll('.stat-num[data-target]');
+const countObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      animateCount(entry.target);
+      countObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+statNums.forEach(el => countObserver.observe(el));
+
+// Compare toggle
+function switchCompare(type) {
+  document.querySelectorAll('.compare-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.compare-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.compare-tab.' + type).classList.add('active');
+  document.getElementById('panel-' + type).classList.add('active');
+}
+
+// Case accordion
+function toggleCase(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+
+// Mobile nav toggle
+const navToggle = document.getElementById('nav-toggle');
+const sideNav = document.getElementById('side-nav');
+navToggle.addEventListener('click', () => sideNav.classList.toggle('open'));
+document.addEventListener('click', (e) => {
+  if (!sideNav.contains(e.target) && e.target !== navToggle) {
+    sideNav.classList.remove('open');
+  }
+});
+navLinks.forEach(link => {
+  link.addEventListener('click', () => sideNav.classList.remove('open'));
+});
+</script>
+</body>
+</html>
