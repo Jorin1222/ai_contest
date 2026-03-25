@@ -472,6 +472,85 @@ tr:hover td { background: var(--green-light); transition: background 0.15s; }
 }
 .scenario-desc { font-size: 0.83rem; color: var(--text-muted); line-height: 1.6; }
 
+/* ── Prompt Block ── */
+.prompt-block {
+  margin-top: 2rem;
+  border-radius: 1rem;
+  border: 1.5px solid #D4D0EE;
+  overflow: hidden;
+}
+.prompt-block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem 1.5rem;
+  background: var(--purple-light);
+  cursor: pointer;
+  transition: background 0.2s;
+  user-select: none;
+}
+.prompt-block-header:hover { background: #DDD9F5; }
+.prompt-block-left { display: flex; align-items: center; gap: 0.9rem; }
+.prompt-icon { font-size: 1.3rem; flex-shrink: 0; }
+.prompt-block-title { font-size: 0.95rem; font-weight: 700; color: var(--purple-dark); }
+.prompt-block-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+.prompt-block-arrow {
+  font-size: 0.85rem; color: var(--purple);
+  transition: transform 0.25s; font-weight: 700;
+}
+.prompt-block.open .prompt-block-arrow { transform: rotate(180deg); }
+.prompt-body { display: none; }
+.prompt-block.open .prompt-body { display: block; animation: fadeIn 0.2s ease; }
+.prompt-code {
+  background: #1C1A2E;
+  padding: 1.5rem 2rem;
+  overflow-x: auto;
+}
+.prompt-code pre {
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 0.78rem; line-height: 1.7;
+  color: #D4D0EE; white-space: pre-wrap; word-break: break-word;
+  margin: 0;
+}
+.prompt-copy-btn {
+  display: block; width: 100%;
+  padding: 0.85rem;
+  background: white; border: none;
+  border-top: 1px solid #E5E5E5;
+  cursor: pointer; font-size: 0.85rem;
+  font-family: "Noto Sans TC", sans-serif;
+  font-weight: 600; color: var(--purple);
+  transition: background 0.15s;
+  text-align: center;
+}
+.prompt-copy-btn:hover { background: var(--purple-light); }
+
+/* ── Demo Link ── */
+.demo-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem 1.5rem;
+  background: var(--green-light);
+  border: 1.5px solid var(--green);
+  border-radius: 0.875rem;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.demo-link:hover {
+  background: #D0EDE6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15,110,86,0.15);
+}
+.demo-link-left { display: flex; align-items: center; gap: 1rem; }
+.demo-link-icon {
+  width: 2.4rem; height: 2.4rem; background: var(--green);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 0.9rem; flex-shrink: 0;
+}
+.demo-link-title { font-size: 0.95rem; font-weight: 700; color: var(--green-dark); }
+.demo-link-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+.demo-link-arrow { font-size: 1.3rem; color: var(--green); font-weight: 700; flex-shrink: 0; }
+
+
+
 /* ── Closing Section ── */
 #closing {
   background: var(--purple-dark);
@@ -776,6 +855,113 @@ footer {
         <div class="phase-desc">一次貼入多筆，AI 逐筆自動判斷類型並套用對應句型</div>
       </div>
     </div>
+
+    <!-- gem_prompt.md 完整展示 -->
+    <div class="prompt-block reveal">
+      <div class="prompt-block-header" onclick="togglePrompt()">
+        <div class="prompt-block-left">
+          <span class="prompt-icon">📄</span>
+          <div>
+            <div class="prompt-block-title">完整第一層 Gem 系統指令</div>
+            <div class="prompt-block-sub">gem_prompt.md · 點擊展開查看完整 Prompt</div>
+          </div>
+        </div>
+        <div class="prompt-block-arrow" id="prompt-arrow">▼</div>
+      </div>
+      <div class="prompt-body" id="prompt-body">
+        <div class="prompt-code"><pre id="prompt-content"># 身份設定
+
+你是一位任務型文字自動化專家。
+你的唯一目的是：分析使用者提供的文件與指定欄位，萃取固定句型與變數邏輯，產出一個可直接建立的Gemini Gem 指令，讓該 Gem 專精執行這個文字產生任務。
+
+---
+
+# 核心流程
+
+## PHASE 1｜接收文件與任務指定
+
+當使用者上傳或貼上文件後，執行以下動作：
+1. 確認收到文件
+2. 請使用者指定目標欄位：
+回覆以下固定訊息：
+
+---
+
+✅ 文件已收到！
+請告訴我：
+**Q1. 你要自動化產生的是哪一欄／哪個區塊的文字？**
+（例如：「結論說明」、「處理情形」、「審查意見」等欄位名稱）
+**Q2. 產生這段文字時，需要參考哪些欄位當作輸入資料？**
+（例如：使用者輸入文字、代號、原因等欄位名稱）
+
+---
+
+## PHASE 2｜分析句型結構
+
+收到使用者回答後，分析目標欄位的所有文字內容，執行以下兩件事：
+
+### 任務一：找出固定骨架
+將句型中不變的部分標記為【固定文字】
+
+### 任務二：找出變數位置
+將每筆資料中不同的部分標記為【變數】，並對應到使用者指定的輸入欄位
+
+### 輸出格式：句型解析確認表
+
+---
+
+📋 **句型解析確認表**
+請確認以下分析是否正確。如有錯誤請告訴我哪一列需要修改，確認無誤請回覆「確認」。
+（可複製至 Excel 進行標註）
+
+### 【句型骨架】
+
+| 編號 | 類型 | 內容 |
+|------|------|------|
+| F01 | 固定文字 | 〔自動填入〕 |
+| F02 | 固定文字 | 〔自動填入〕 |
+| V01 | 變數 | 〔變數名稱〕← 來自「〔對應輸入欄位〕」|
+| V02 | 變數 | 〔變數名稱〕← 來自「〔對應輸入欄位〕」|
+
+### 【完整句型預覽】
+
+〔將固定文字與變數組合成完整句型，變數用{{變數名}}標示〕
+
+### 【句型變體】
+
+| 變體編號 | 觸發條件 | 對應句型預覽 |
+|----------|----------|--------------|
+| T01 | 〔例：「類別」欄位 = 某個值〕 | 〔句型預覽〕 |
+| T02 | 〔例：「類別」欄位 = 另一個值〕 | 〔句型預覽〕 |
+| T03 | 〔依此類推，有幾種填幾種；若只有一種句型填 N/A〕 | 〔句型預覽〕 |
+
+---
+
+## PHASE 3｜產出第二層 Gem 指令
+
+使用者確認後，輸出完整的第二層 Gem 指令（含身份設定、輸入方式、句型規則、輸出規則、邊界條件）
+
+## PHASE 4｜給使用者的操作說明
+
+產出指令後，附上：
+1. 複製上方指令 → 前往 Gemini Gems → 建立新 Gem
+2. 命名為「〔任務名稱〕自動產生器」
+3. 貼上指令 → 儲存
+4. 之後直接貼入任何原始文字，自動產生統一格式 ✅
+
+---
+
+# 邊界條件
+
+- 使用者沒有指定欄位就要求產出指令：停留在 PHASE 1，重新詢問 Q1 和 Q2
+- 文件中只有一筆範例資料：照常執行，並提示「建議提供 3 筆以上資料以提升句型分析準確度」
+- 使用者問與任務無關的問題：回覆「我專門負責分析文件並產出任務型 Gem 指令，請上傳你的文件讓我開始分析！」
+- 輸出語言：繁體中文</pre></div>
+        <button class="prompt-copy-btn" onclick="copyPrompt()">
+          <span id="copy-label">📋 複製完整指令</span>
+        </button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -848,6 +1034,17 @@ footer {
   <div class="subsection reveal">
     <div class="subsection-title">演練標的：廢機動車輛類 CCTV 異常事件</div>
     <p>以「廢機動車輛類-乙計畫 CCTV 判讀異常事件彙總表」為演練標的，目標欄位為「稽核認證團體異常處理情形」，成功識別出 3 種句型變體：</p>
+
+    <a class="demo-link" href="https://gemini.google.com/share/2914527f98a8" target="_blank" rel="noopener">
+      <div class="demo-link-left">
+        <span class="demo-link-icon">▶</span>
+        <div>
+          <div class="demo-link-title">查看完整實際操作示範</div>
+          <div class="demo-link-sub">Gemini 對話紀錄 · 從原始文字到統一輸出的完整過程</div>
+        </div>
+      </div>
+      <span class="demo-link-arrow">→</span>
+    </a>
 
     <div class="table-wrap">
       <div class="table-title">表 4-1 廢車 CCTV 異常文字格式經第一層分析後變體產出結果</div>
@@ -1187,6 +1384,23 @@ function switchCompare(type) {
 function toggleCase(id) {
   const card = document.getElementById(id);
   card.classList.toggle('open');
+}
+
+// Prompt block toggle
+function togglePrompt() {
+  const block = document.querySelector('.prompt-block');
+  block.classList.toggle('open');
+}
+
+// Copy prompt
+function copyPrompt() {
+  const text = document.getElementById('prompt-content').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.prompt-copy-btn');
+    btn.innerHTML = '✅ 已複製！';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.innerHTML = '📋 複製完整指令'; btn.style.color = ''; }, 2000);
+  });
 }
 
 // Mobile nav toggle
